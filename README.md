@@ -107,6 +107,10 @@ points to a Json file (e.g. dataset/movierating.json) and make sure there is als
 
 The output of these runs can be found in the folder called output which will be automatically created if not present already.
 
+To run a new Json program with this extension, either the transform module should be fixed to convert the Spark program
+to an equivalent Java program, or one should make the Java program itself. Please take a look at the classes of one of 
+the converted benchmarks (e.g. JsonMovieRating, JsonMovieRatingDriver and JsonMovieRatingCustomArray).
+
 Example of a JsonMutation run configuration for the BigFuzzDriver:
 ![JsonMutation_run_configuration_example](doc/Example_JsonMutation.jpg)
 
