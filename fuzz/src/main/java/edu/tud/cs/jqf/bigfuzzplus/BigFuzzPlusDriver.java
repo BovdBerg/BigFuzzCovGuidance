@@ -9,12 +9,12 @@ import java.io.File;
 import java.io.IOException;
 import java.time.Duration;
 
-import static edu.tud.cs.jqf.bigfuzzplus.SelectionMethod.*;
+import static edu.tud.cs.jqf.bigfuzzplus.GuidanceSelectionMethod.*;
 import static edu.tud.cs.jqf.bigfuzzplus.systematicMutation.SystematicMutation.*;
 
 public class BigFuzzPlusDriver {
 	// These booleans are for debugging purposes only, toggle them if you want to see the information
-	public static boolean PRINT_LINE_FOR_EACH_TRIAL = true; // enable for less cluttered debugging
+	public static boolean PRINT_LINE_FOR_EACH_TRIAL = false; // enable for less cluttered debugging
 	public static boolean PRINT_METHOD_NAMES = false;
 	public static boolean PRINT_MUTATION_DETAILS = false;
     public static boolean PRINT_COVERAGE_DETAILS = false;
@@ -29,7 +29,7 @@ public class BigFuzzPlusDriver {
     public static boolean SAVE_UNIQUE_FAILURES = true;
 	public static int NUMBER_OF_ITERATIONS = 10;
 	public static Duration maxDuration = null; // example: Duration.of(30, ChronoUnit.MINUTES);
-	public static SelectionMethod selection = FULLY_BOOSTED_GREY_BOX;
+	public static GuidanceSelectionMethod selection = FULLY_BOOSTED_GREY_BOX;
 
     /**
      * Run the BigFuzzPlus program with the following parameters for StackedMutation:
@@ -74,21 +74,67 @@ public class BigFuzzPlusDriver {
 
 		long programStartTime = System.currentTimeMillis();
 
-	    BigFuzzPlusLog log = new BigFuzzPlusLog();
+	    BigFuzzPlusLog log = BigFuzzPlusLog.getInstance();
 		BigFuzzPlusLog.resetInstance();
 
 		String selectionMethodString;
-		if (selection == SelectionMethod.FULLY_BOOSTED_GREY_BOX) {
-			selectionMethodString = "FBGB";
-		} else if (selection == SelectionMethod.HALF_BOOSTED_GREY_BOX) {
-			selectionMethodString = "HBGB";
-		} else if (selection == GREY_BOX) {
-			selectionMethodString = "GB";
-		} else {
-			selectionMethodString = "BB";
+		switch (selection) {
+			case FULLY_BOOSTED_GREY_BOX: selectionMethodString = "FBGB";
+				break;
+			case HALF_BOOSTED_GREY_BOX: selectionMethodString = "HBGB";
+				break;
+			case GREY_BOX: selectionMethodString = "GB";
+				break;
+			case BLACK_BOX: selectionMethodString = "BB";
+				break;
+			default: selectionMethodString = "";
 		}
 
-		File allOutputDir = new File("fuzz-results");
+	    String file;
+	    switch (testClassName) {
+		    case "WordCountDriver":
+		    case "WordCountNewDriver":
+		    case "OneDFOperatorDriver":
+			    file = "dataset/conf_wordcount";
+			    break;
+		    case "CommuteTypeDriver":
+			    file = "dataset/conf_commutetype";
+			    break;
+		    case "ExternalUDFDriver":
+			    file = "dataset/conf_externaludf";
+			    break;
+		    case "FindSalaryDriver":
+			    file = "dataset/conf_findsalary";
+			    break;
+		    case "StudentGradesDriver":
+			    file = "dataset/conf_studentgrades";
+			    break;
+		    case "MovieRatingDriver":
+			    file = "dataset/conf_movierating";
+			    break;
+		    case "SalaryAnalysisDriver":
+			    file = "dataset/conf_salary";
+			    break;
+		    case "InfiniteloopDriver":
+			    file = "dataset/conf_numberseries";
+			    break;
+		    case "TwoFlowsDriver":
+			    file = "conf_ageanalysis";
+			    break;
+		    case "DFOperatorDriver":
+			    file = "dataset/conf_incomeaggregation";
+			    break;
+		    case "PropertyDriver":
+			    file = "dataset/conf_property";
+			    break;
+		    case "BranchMarkDriver":
+			    file = "dataset/conf_branchmark";
+			    break;
+		    default:
+			    file = "dataset/conf";
+	    }
+
+	    File allOutputDir = new File("fuzz-results");
 		File outputDir = new File(allOutputDir, "" + programStartTime + " " + testClassName +
 				" " + mutationMethodClassName +
 				" " + selectionMethodString + " " + NUMBER_OF_ITERATIONS + "x" + maxTrials);
@@ -111,7 +157,7 @@ public class BigFuzzPlusDriver {
 
 		StackedMutationEnum.StackedMutationMethod stackedMutationMethod = StackedMutationEnum.StackedMutationMethod.Disabled;
 		int intMutationStackCount = 0;
-		log.logProgramArguments(testClassName, testMethodName, mutationMethodClassName, outputDir, programStartTime);
+		log.logProgramArguments(testClassName, testMethodName, mutationMethodClassName, outputDir, programStartTime, file, maxTrials);
 		if (mutationMethodClassName.equalsIgnoreCase("stackedmutation")) {
 			int intStackedMutationMethod = args.length > 4 ? Integer.parseInt(args[4]) : 0;
 			// This variable is used for the stackedMutationMethod: Smart_mutate
@@ -134,57 +180,13 @@ public class BigFuzzPlusDriver {
 			log.logProgramArgumentsSystematicMutation(MUTATE_COLUMNS, MUTATION_DEPTH);
 		}
 
-		String file;
-		switch (testClassName) {
-			case "WordCountDriver":
-			case "WordCountNewDriver":
-			case "OneDFOperatorDriver":
-				file = "dataset/conf_wordcount";
-				break;
-			case "CommuteTypeDriver":
-				file = "dataset/conf_commutetype";
-				break;
-			case "ExternalUDFDriver":
-				file = "dataset/conf_externaludf";
-				break;
-			case "FindSalaryDriver":
-				file = "dataset/conf_findsalary";
-				break;
-			case "StudentGradesDriver":
-				file = "dataset/conf_studentgrades";
-				break;
-			case "MovieRatingDriver":
-				file = "dataset/conf_movierating";
-				break;
-			case "SalaryAnalysisDriver":
-				file = "dataset/conf_salary";
-				break;
-			case "InfiniteloopDriver":
-				file = "dataset/conf_numberseries";
-				break;
-			case "TwoFlowsDriver":
-				file = "conf_ageanalysis";
-				break;
-			case "DFOperatorDriver":
-				file = "dataset/conf_incomeaggregation";
-				break;
-			case "PropertyDriver":
-				file = "dataset/conf_property";
-				break;
-			case "BranchMarkDriver":
-				file = "dataset/conf_branchmark";
-				break;
-			default:
-				file = "dataset/conf";
-		}
-
 		log.printProgramArguments();
 		System.out.println();
 
 		System.out.println("************ PROGRAM RUNNING ************");
 		for (int i = 0; i < NUMBER_OF_ITERATIONS; i++) {
 			int atIteration = i + 1;
-			System.out.println("*** ITERATION " + atIteration);
+			System.out.println("\n*** ITERATION " + atIteration);
 
 			long iterationStartTime = System.currentTimeMillis();
 			String iterationOutputDir = outputDir + "/Test" + atIteration;
@@ -210,6 +212,7 @@ public class BigFuzzPlusDriver {
 				long endTime = System.currentTimeMillis();
 
 				// Evaluate the results
+				log.evaluation(maxTrials, guidance, atIteration);
 				log.writeToLists(guidance, maxTrials);
 				log.addDuration(endTime - iterationStartTime);
 			} catch (Exception e) {
