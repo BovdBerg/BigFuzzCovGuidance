@@ -42,10 +42,12 @@ Below is a list of which driver you need to run per implementation:
 | Implementation | Driver |
 | --- | ----------- |
 |tabular input specification|TabFuzzDriver|
-|JSON input specification|BigFuzzPlusDriver|
+|JSON input specification|BigFuzzDriver*|
 |Coverage guided fuzzing|BigFuzzPlusDriver|
 |Systematic mutations for fuzzing|BigFuzzPlusDriver|
 |Stacking of mutation|BigFuzzPlusDriver|
+
+<font size="1">* BigFuzzPlusDriver also works, but made to run on BigFuzzDriver. </font>
 ## BigFuzzPlusDriver
 Independent of which implementation is used, the first 4 program arguments are:  
 > [0] - test class                                           
@@ -79,8 +81,39 @@ If run with SystematicMutation as mutation method:
 >[4] - mutate columns            (default = disabled)  
 >[5] - max mutation depth        (default = 6)  
 
+If run with JsonMutation as mutation method: (Although advised to run with BigFuzzDriver instead of BigFuzzPlusDriver)
+> [2] = JsonMutation 
+
+Make sure to make the conf file reference to an initial input file that is a json file (e.g. dataset/movierating.json) and make sure there is also a schema for that input file (e.g. movierating_schema.json). The name of the schema file should be exactly [benchmark]_schema.json.
+
 Example of a StackedMutation run configuration:             
 ![StackedMutation run configuration example](doc/StackedMutationConfigurationExample.png)
+
+Example of a JsonMutation run configuration for the BigFuzzPlusDriver:
+![JsonMutation_Plus_run_configuration_example](doc/Example_JsonMutationPlus.jpg)
+
+## BigFuzzDriver
+For the Json variant, it is best to run with the BigFuzzDriver since the extension is made for this driver.
+
+The arguments for a run with this driver are:
+> [0] - test class                                           
+> [1] - test method                                          
+> [2] - Amount of trials
+
+There should also be a conf file inside the dataset folder, pointing to a file with the initial input seed.
+To run the BigFuzzDriver with a program that uses Json as its in-/output structure, make sure that the conf file 
+points to a Json file (e.g. dataset/movierating.json) and make sure there is also a schema for that input file 
+(e.g. movierating_schema.json). The name of the schema file should be exactly [benchmark]_schema.json.
+
+The output of these runs can be found in the folder called output which will be automatically created if not present already.
+
+To run a new Json program with this extension, either the transform module should be fixed to convert the Spark program
+to an equivalent Java program, or one should make the Java program itself. Please take a look at the classes of one of 
+the converted benchmarks (e.g. JsonMovieRating, JsonMovieRatingDriver and JsonMovieRatingCustomArray).
+
+Example of a JsonMutation run configuration for the BigFuzzDriver:
+![JsonMutation_run_configuration_example](doc/Example_JsonMutation.jpg)
+
 ## TabFuzzDriver
   
 
